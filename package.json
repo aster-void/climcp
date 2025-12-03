@@ -5,7 +5,8 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target node && cp assets/* dist/",
+    "build": "bun build src/index.ts --outdir dist --target node --minify && cp package.json dist/",
+    "prepare": "bun run build",
     "test": "bun run build && bun test && bash scripts/test-cli.sh && bun scripts/test-cli-interactive.ts",
     "test:interactive": "bun run build && bun scripts/test-cli-interactive.ts"
   },
@@ -16,17 +17,15 @@
   "author": "",
   "license": "MIT",
   "packageManager": "bun@1.3.2",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.24.2",
-    "commander": "^14.0.2",
-    "json5": "^2.2.3",
-    "valibot": "^1.2.0"
-  },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.2",
     "@modelcontextprotocol/server-filesystem": "^2025.11.25",
     "@types/node": "^24.10.1",
+    "commander": "^14.0.2",
+    "json5": "^2.2.3",
     "lefthook": "^2.0.7",
     "prettier": "^3.7.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "valibot": "^1.2.0"
   }
 }
