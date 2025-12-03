@@ -1,5 +1,5 @@
 {
-  "name": "mcpcli",
+  "name": "mcp-console",
   "version": "0.0.1",
   "description": "CLI for communicating with MCPs.",
   "type": "module",
@@ -10,7 +10,7 @@
     "test:interactive": "bun run build && bun scripts/test-cli-interactive.ts"
   },
   "bin": {
-    "mcpcli": "dist/index.js"
+    "mcp-console": "dist/index.js"
   },
   "keywords": [],
   "author": "",

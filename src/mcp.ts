@@ -32,7 +32,7 @@ export function buildTransport(commandArgs: string[]) {
 export async function connectClient(commandArgs: string[]) {
 	const transport = buildTransport(commandArgs);
 	const client = new Client({
-		name: pkg.name || "mcpcli",
+		name: pkg.name || "mcp-console",
 		version: pkg.version || "0.0.0",
 	});
 

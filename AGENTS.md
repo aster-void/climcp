@@ -4,7 +4,7 @@ Guidelines for agents working on this repository. Avoid destructive operations a
 
 ## Project Overview
 
-- MCP CLI built with bun. `mcpcli connect <command...>` starts and interacts with a server, `mcpcli run "tool" <command...>` executes once.
+- MCP Console built with bun. `mcp-console connect <command...>` starts and interacts with a server, `mcp-console run "tool" <command...>` executes once.
 - Exit codes follow the policy described in README, clearly separating user errors from connection-related errors.
 
 ## Directory Structure (directories only)
