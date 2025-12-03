@@ -3,5 +3,6 @@ pre-commit:
     prettier:
       glob: "*.{ts,tsx,js,jsx,cjs,mjs,cts,mts,json,md}"
       run: bun prettier --write {staged_files}
+      stage_fixed: true
     test:
       run: bun run test
