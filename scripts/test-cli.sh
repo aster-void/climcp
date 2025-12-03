@@ -9,6 +9,6 @@ if ! [ "$(echo "$out" | jq ".structuredContent.content")" != "Allowed directorie
 fi
 
 # should fail
-$CLI run list_allowed_directories bunx @modelcontextprotocol/server-filesystem . <<<"not-json" && exit 1
+$CLI run list_allowed_directories bunx @modelcontextprotocol/server-filesystem . <<<"not-json" 2>/dev/null && exit 1 
 
 echo "All tests passed."
