@@ -1,0 +1,13 @@
+{
+  "name": "mcpcli",
+  "version": "0.0.1",
+  "description": "CLI for communicating with MCPs.",
+  "type": "module",
+  "main": "./index.js",
+  "bin": {
+    "mcpcli": "./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
