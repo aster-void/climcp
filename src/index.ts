@@ -1,7 +1,7 @@
 import { Command } from "commander";
-import { EXIT_USAGE } from "./constants.js";
-import { handleConnect } from "./cmd/connect.js";
-import { handleRun } from "./cmd/run.js";
+import { EXIT_USAGE } from "./constants.ts";
+import { handleConnect } from "./cmd/connect.ts";
+import { handleRun } from "./cmd/run.ts";
 
 const program = new Command();
 program

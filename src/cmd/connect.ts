@@ -1,10 +1,10 @@
 import readline from "node:readline";
 import process from "node:process";
-import { EXIT_CONNECT } from "../constants.js";
-import { askLine } from "../io.js";
-import { listTools, printCallResult } from "../mcp.js";
-import { parseInvocation, parseJson5Payload } from "../parsers.js";
-import { createRunner } from "../runner.js";
+import { EXIT_CONNECT } from "../constants.ts";
+import { askLine } from "../io.ts";
+import { listTools, printCallResult } from "../mcp.ts";
+import { parseInvocation, parseJson5Payload } from "../parsers.ts";
+import { createRunner } from "../runner.ts";
 
 export async function handleConnect(target: string) {
   const runner = await createRunner(target);

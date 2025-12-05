@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { toTSStyle, type JsonSchema } from "./json-schema.js";
+import { toTSStyle, type JsonSchema } from "./json-schema.ts";
 
 describe("toTSStyle", () => {
 	test("simple string property", () => {

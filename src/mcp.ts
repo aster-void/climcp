@@ -1,6 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { type Tool } from "@modelcontextprotocol/sdk/spec.types.js";
-import { toTSStyleOneLine, parseJsonSchema } from "./lib/json-schema.js";
+import { toTSStyleOneLine, parseJsonSchema } from "./lib/json-schema.ts";
 
 export type ToolInfo = Pick<Tool, "name" | "description" | "inputSchema">;
 

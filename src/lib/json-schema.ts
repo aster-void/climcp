@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { cyan, blue, yellow, green, dim } from "./colors.js";
+import { cyan, blue, yellow, green, dim } from "./colors.ts";
 
 export type JsonSchema = {
   type?: string | string[];

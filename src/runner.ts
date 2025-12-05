@@ -3,8 +3,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { ChildProcess } from "node:child_process";
-import { createTransport } from "./transport.js";
-import { EXIT_CONNECT, EXIT_USAGE } from "./constants.js";
+import { createTransport } from "./transport.ts";
+import { EXIT_CONNECT, EXIT_USAGE } from "./constants.ts";
 import pkg from "../package.json" with { type: "json" };
 
 export interface McpRunner {

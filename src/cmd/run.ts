@@ -1,8 +1,8 @@
-import { EXIT_CONNECT, EXIT_TOOL, EXIT_USAGE } from "../constants.js";
-import { readStdin } from "../io.js";
-import { listTools } from "../mcp.js";
-import { parsePayload } from "../parsers.js";
-import { createRunner } from "../runner.js";
+import { EXIT_CONNECT, EXIT_TOOL, EXIT_USAGE } from "../constants.ts";
+import { readStdin } from "../io.ts";
+import { listTools } from "../mcp.ts";
+import { parsePayload } from "../parsers.ts";
+import { createRunner } from "../runner.ts";
 
 export async function handleRun(
   target: string,
