@@ -7,15 +7,29 @@ Guidelines for agents working on this repository. Avoid destructive operations a
 - climcp built with bun. `climcp connect <command...>` starts and interacts with a server, `climcp run "tool" <command...>` executes once.
 - Exit codes follow the policy described in README, clearly separating user errors from connection-related errors.
 
-## Directory Structure (directories only)
+## Directory Structure
 
 ```
 .
-├─ src/      # TypeScript implementation
-├─ dist/     # Built JS output
-├─ bin/      # CLI wrapper placement
-├─ scripts/  # Development/verification scripts
-└─ nix/      # devshell and other Nix configs
+├─ src/
+│  ├─ index.ts          # CLI entrypoint (minimal)
+│  ├─ runner.ts         # McpRunner interface & createRunner()
+│  ├─ mcp.ts            # Tool utilities (listTools, printCallResult)
+│  ├─ transport/
+│  │  ├─ index.ts       # createTransport() & type detection
+│  │  ├─ types.ts       # TransportConfig, TransportType
+│  │  ├─ stdio.ts       # stdio transport
+│  │  ├─ http.ts        # Streamable HTTP transport
+│  │  └─ sse.ts         # SSE transport (deprecated)
+│  ├─ cmd/
+│  │  ├─ run.ts         # `climcp run` handler
+│  │  └─ connect.ts     # `climcp connect` handler
+│  └─ lib/
+│     ├─ json-schema.ts # JSON Schema → TypeScript-style formatter
+│     └─ colors.ts      # ANSI color utilities
+├─ dist/                # Built JS output
+├─ scripts/             # Development/verification scripts
+└─ nix/                 # devshell and other Nix configs
 ```
 
 ## Top Priority Principles
@@ -36,9 +50,15 @@ Guidelines for agents working on this repository. Avoid destructive operations a
 
 ```sh
 bun run build # build the package
-bun test # run tests
-bun check # run checks
+bun test      # run tests
+bun check     # run type check + tests
 ```
+
+## Command Tree
+
+- `bun run build` → type-check + bundle + copy assets
+- `bun test` → unit tests + CLI integration tests
+- `bun check` → type-check + tests
 
 ## Nix / Flake Notes
 
