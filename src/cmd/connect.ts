@@ -1,25 +1,40 @@
 import readline from "node:readline";
 import process from "node:process";
-import { EXIT_CONNECT } from "../constants.ts";
-import { askLine } from "../io.ts";
-import { listTools, printCallResult } from "../mcp.ts";
-import { parseInvocation, parseJson5Payload } from "../parsers.ts";
-import { createRunner } from "../runner.ts";
+import { EXIT_CONNECT, EXIT_USAGE } from "../lib/constants.ts";
+import { askLine } from "../lib/io.ts";
+import {
+  listTools,
+  formatTool,
+  formatCallResult,
+  type ToolInfo,
+} from "../domain/tools.ts";
+import { parseInvocation, parseJson5Payload } from "./parse.ts";
+import { createRunner } from "../domain/runner.ts";
+import { getErrorMessage } from "../lib/errors.ts";
 
-export async function handleConnect(target: string) {
-  const runner = await createRunner(target);
-  const { client, shutdown } = runner;
+export async function handleConnect(target: string): Promise<never> {
+  const result = await createRunner(target, {
+    onServerStderr: (chunk) => process.stderr.write(`[server] ${chunk}`),
+  });
 
-  const toolNames = new Set<string>();
-  try {
-    const tools = await listTools(client);
-    tools.forEach((tool) => toolNames.add(tool.name));
-  } catch (error) {
-    console.error(
-      `Failed to list tools: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    await shutdown(EXIT_CONNECT);
+  if (!result.ok) {
+    console.error(result.error);
+    process.exit(result.phase === "transport" ? EXIT_USAGE : EXIT_CONNECT);
   }
+
+  const { client, shutdown } = result.runner;
+
+  let tools: ToolInfo[];
+  try {
+    tools = await listTools(client);
+    tools.forEach((tool) => console.log(formatTool(tool)));
+  } catch (error) {
+    console.error(`Failed to list tools: ${getErrorMessage(error)}`);
+    await shutdown();
+    process.exit(EXIT_CONNECT);
+  }
+
+  const toolNames = new Set(tools.map((t) => t.name));
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -27,11 +42,12 @@ export async function handleConnect(target: string) {
   });
 
   let closing = false;
-  const cleanup = async (code = 0) => {
+  const cleanup = async (code = 0): Promise<void> => {
     if (closing) return;
     closing = true;
     rl.close();
-    await shutdown(code);
+    await shutdown();
+    process.exit(code);
   };
 
   rl.on("SIGINT", () => cleanup(0));
@@ -41,7 +57,7 @@ export async function handleConnect(target: string) {
     const line = await askLine(rl);
     if (line === null) {
       await cleanup(0);
-      return;
+      return process.exit(0);
     }
 
     const trimmed = line.trim();
@@ -53,16 +69,15 @@ export async function handleConnect(target: string) {
       case "/q":
       case "/quit": {
         await cleanup(0);
-        return;
+        return process.exit(0);
       }
       case "/t":
       case "/tools": {
         try {
-          await listTools(client);
+          const refreshedTools = await listTools(client);
+          refreshedTools.forEach((tool) => console.log(formatTool(tool)));
         } catch (error) {
-          console.error(
-            `Failed to list tools: ${error instanceof Error ? error.message : String(error)}`,
-          );
+          console.error(`Failed to list tools: ${getErrorMessage(error)}`);
         }
         continue;
       }
@@ -91,15 +106,13 @@ export async function handleConnect(target: string) {
     }
 
     try {
-      const result = await client.callTool({
+      const callResult = await client.callTool({
         name: parsedInvocation.value.toolName,
         arguments: payloadResult.value,
       });
-      printCallResult(result);
+      console.log(formatCallResult(callResult));
     } catch (error) {
-      console.error(
-        `Tool call failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      console.error(`Tool call failed: ${getErrorMessage(error)}`);
     }
   }
 }

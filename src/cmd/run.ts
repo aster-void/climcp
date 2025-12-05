@@ -1,41 +1,48 @@
-import { EXIT_CONNECT, EXIT_TOOL, EXIT_USAGE } from "../constants.ts";
-import { readStdin } from "../io.ts";
-import { listTools } from "../mcp.ts";
-import { parsePayload } from "../parsers.ts";
-import { createRunner } from "../runner.ts";
+import process from "node:process";
+import { EXIT_CONNECT, EXIT_TOOL, EXIT_USAGE } from "../lib/constants.ts";
+import { readStdin } from "../lib/io.ts";
+import { listTools, formatTool, validateToolName } from "../domain/tools.ts";
+import { parsePayload } from "./parse.ts";
+import { createRunner } from "../domain/runner.ts";
+import { getErrorMessage } from "../lib/errors.ts";
 
 export async function handleRun(
   target: string,
   toolName: string | undefined,
   args: string[],
-) {
-  const runner = await createRunner(target);
-  const { client, shutdown } = runner;
+): Promise<never> {
+  const result = await createRunner(target, {
+    onServerStderr: (chunk) => process.stderr.write(`[server] ${chunk}`),
+  });
 
-  if (toolName === undefined) {
-    try {
-      await listTools(client);
-    } catch (error) {
-      console.error(
-        `Failed to list tools: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      return shutdown(EXIT_CONNECT);
-    }
-    return shutdown(0);
+  if (!result.ok) {
+    console.error(result.error);
+    process.exit(result.phase === "transport" ? EXIT_USAGE : EXIT_CONNECT);
   }
 
+  const { client, shutdown } = result.runner;
+
+  const exit = async (code: number): Promise<never> => {
+    await shutdown();
+    process.exit(code);
+  };
+
+  let tools;
   try {
-    const tools = await client.listTools();
-    const names = new Set((tools.tools || []).map((t) => t.name));
-    if (!names.has(toolName)) {
-      console.error(`Tool not found: ${toolName}`);
-      return shutdown(EXIT_CONNECT);
-    }
+    tools = await listTools(client);
   } catch (error) {
-    console.error(
-      `Failed to list tools: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return shutdown(EXIT_CONNECT);
+    console.error(`Failed to list tools: ${getErrorMessage(error)}`);
+    return exit(EXIT_CONNECT);
+  }
+
+  if (toolName === undefined) {
+    tools.forEach((tool) => console.log(formatTool(tool)));
+    return exit(0);
+  }
+
+  if (!validateToolName(tools, toolName)) {
+    console.error(`Tool not found: ${toolName}`);
+    return exit(EXIT_CONNECT);
   }
 
   let input: string;
@@ -45,31 +52,27 @@ export async function handleRun(
     try {
       input = await readStdin();
     } catch (error) {
-      console.error(
-        `Failed to read stdin: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      return shutdown(EXIT_USAGE);
+      console.error(`Failed to read stdin: ${getErrorMessage(error)}`);
+      return exit(EXIT_USAGE);
     }
   }
 
   const payloadResult = parsePayload(input, true);
   if (!payloadResult.ok) {
     console.error(payloadResult.error.message);
-    return shutdown(EXIT_USAGE);
+    return exit(EXIT_USAGE);
   }
 
   try {
-    const result = await client.callTool({
+    const callResult = await client.callTool({
       name: toolName,
       arguments: payloadResult.value,
     });
-    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify(callResult, null, 2));
   } catch (error) {
-    console.error(
-      `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return shutdown(EXIT_TOOL);
+    console.error(`Tool execution failed: ${getErrorMessage(error)}`);
+    return exit(EXIT_TOOL);
   }
 
-  return shutdown(0);
+  return exit(0);
 }

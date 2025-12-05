@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { EXIT_USAGE } from "./constants.ts";
+import { EXIT_USAGE } from "./lib/constants.ts";
 import { handleConnect } from "./cmd/connect.ts";
 import { handleRun } from "./cmd/run.ts";
 

@@ -13,33 +13,53 @@ It may seem you are looking at CLAUDE.md, but this is AGENTS.md.
 ```
 .
 ├─ src/
-│  ├─ index.ts          # CLI entrypoint (minimal)
-│  ├─ runner.ts         # McpRunner interface & createRunner()
-│  ├─ mcp.ts            # Tool utilities (listTools, printCallResult)
-│  ├─ transport/
-│  │  ├─ index.ts       # createTransport() & type detection
-│  │  ├─ types.ts       # TransportConfig, TransportType
-│  │  ├─ stdio.ts       # stdio transport
-│  │  ├─ http.ts        # Streamable HTTP transport
-│  │  └─ sse.ts         # SSE transport (deprecated)
-│  ├─ cmd/
-│  │  ├─ run.ts         # `climcp run` handler
-│  │  └─ connect.ts     # `climcp connect` handler
-│  └─ lib/
-│     ├─ json-schema.ts # JSON Schema → TypeScript-style formatter
-│     └─ colors.ts      # ANSI color utilities
-├─ dist/                # Built JS output
-├─ scripts/             # Development/verification scripts
-└─ nix/                 # devshell and other Nix configs
+│  ├─ index.ts              # CLI entrypoint (minimal)
+│  ├─ cmd/                   # UI layer (console.log, process.exit)
+│  │  ├─ run.ts             # `climcp run` handler
+│  │  ├─ connect.ts         # `climcp connect` handler
+│  │  └─ parse.ts           # Input parsing (invocation, JSON5, query-style)
+│  ├─ domain/                # Business logic (no I/O side effects)
+│  │  ├─ runner.ts          # McpRunner interface & createRunner()
+│  │  ├─ tools.ts           # Tool utilities (listTools, formatTool, validateToolName)
+│  │  └─ transport.ts       # MCP Transport creation (Stdio, HTTP, SSE)
+│  └─ lib/                   # Pure utilities (no dependencies on upper layers)
+│     ├─ result.ts          # Result<T> type for error handling
+│     ├─ errors.ts          # Error message formatting
+│     ├─ io.ts              # I/O utilities (readline, stdin)
+│     ├─ constants.ts       # Exit codes
+│     ├─ json-schema.ts     # JSON Schema → TypeScript-style formatter
+│     └─ colors.ts          # ANSI color utilities
+├─ dist/                     # Built JS output
+├─ scripts/                  # Development/verification scripts
+└─ nix/                      # devshell and other Nix configs
 ```
 
-## Top Priority Principles
+## Dependency Graph
 
-- Make failures explicit: Don't suppress errors. Don't silence with `|| true`. Avoid suppression with `if pkgs ? foo`.
-- Plan before working: Proceed in order: investigation → plan presentation → approval.
-- Confirm before destructive operations: Obtain y/n approval before execution (exception only when user instruction contains `--yes`).
-- Fix one cause at a time: Identify the cause, resolve one issue at a time, and re-execute.
-- Don't detour: If the initial plan fails, present the next plan and obtain confirmation before proceeding.
+```
+index.ts
+├── lib/constants.ts
+├── cmd/connect.ts
+│   ├── domain/runner.ts → domain/transport.ts
+│   ├── domain/tools.ts → lib/json-schema.ts → lib/colors.ts
+│   ├── cmd/parse.ts → lib/result.ts
+│   ├── lib/io.ts
+│   ├── lib/constants.ts
+│   └── lib/errors.ts
+└── cmd/run.ts
+    ├── domain/runner.ts → domain/transport.ts
+    ├── domain/tools.ts → lib/json-schema.ts → lib/colors.ts
+    ├── cmd/parse.ts → lib/result.ts
+    ├── lib/io.ts
+    ├── lib/constants.ts
+    └── lib/errors.ts
+```
+
+### Layer Policy
+
+- `cmd/*` → UI layer (console.log, process.exit, user input parsing)
+- `domain/*` → Business logic (no I/O side effects)
+- `lib/*` → Pure utilities (no dependencies on upper layers)
 
 ## Basic Flow
 

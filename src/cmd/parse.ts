@@ -1,5 +1,5 @@
 import JSON5 from "json5";
-import { err, ok, type Result } from "./utils.ts";
+import { err, ok, type Result } from "../lib/result.ts";
 import * as v from "valibot";
 
 export type ToolInvocation = {
