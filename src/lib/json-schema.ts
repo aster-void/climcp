@@ -35,62 +35,16 @@ export function parseJsonSchema(input: unknown): JsonSchema {
   return v.parse(jsonSchemaSchema, input);
 }
 
-export function toTSStyle(schema: JsonSchema, indent = 0): string {
-  const ind = "  ".repeat(indent);
-  const innerInd = "  ".repeat(indent + 1);
-
-  if (schema.enum) {
-    return schema.enum.map((v) => JSON.stringify(v)).join(" | ");
-  }
-
-  if (schema.anyOf) {
-    return schema.anyOf.map((s) => toTSStyle(s, indent)).join(" | ");
-  }
-
-  if (schema.oneOf) {
-    return schema.oneOf.map((s) => toTSStyle(s, indent)).join(" | ");
-  }
-
-  if (schema.allOf) {
-    return schema.allOf.map((s) => toTSStyle(s, indent)).join(" & ");
-  }
-
-  const types = Array.isArray(schema.type) ? schema.type : [schema.type];
-
-  if (types.includes("array") && schema.items) {
-    return `${toTSStyle(schema.items, indent)}[]`;
-  }
-
-  if (types.includes("object") && schema.properties) {
-    const requiredSet = new Set(schema.required || []);
-    const lines: string[] = ["{"];
-
-    for (const [key, propSchema] of Object.entries(schema.properties)) {
-      const optional = requiredSet.has(key) ? "" : "?";
-      const propType = toTSStyle(propSchema, indent + 1);
-      const desc = propSchema.description
-        ? ` // ${propSchema.description}`
-        : "";
-      lines.push(`${innerInd}${key}${optional}: ${propType};${desc}`);
-    }
-
-    lines.push(`${ind}}`);
-    return lines.join("\n");
-  }
-
-  if (types.includes("string")) return "string";
-  if (types.includes("number")) return "number";
-  if (types.includes("integer")) return "number";
-  if (types.includes("boolean")) return "boolean";
-  if (types.includes("null")) return "null";
-
-  return "unknown";
-}
-
 export function toTSStyleOneLine(schema: JsonSchema, colored = false): string {
   const c = colored
     ? { cyan, blue, yellow, green, dim }
-    : { cyan: (s: string) => s, blue: (s: string) => s, yellow: (s: string) => s, green: (s: string) => s, dim: (s: string) => s };
+    : {
+        cyan: (s: string) => s,
+        blue: (s: string) => s,
+        yellow: (s: string) => s,
+        green: (s: string) => s,
+        dim: (s: string) => s,
+      };
 
   return toTSStyleOneLineInner(schema, c);
 }
@@ -105,19 +59,27 @@ type ColorFns = {
 
 function toTSStyleOneLineInner(schema: JsonSchema, c: ColorFns): string {
   if (schema.enum) {
-    return schema.enum.map((val) => c.green(JSON.stringify(val))).join(c.dim(" | "));
+    return schema.enum
+      .map((val) => c.green(JSON.stringify(val)))
+      .join(c.dim(" | "));
   }
 
   if (schema.anyOf) {
-    return schema.anyOf.map((s) => toTSStyleOneLineInner(s, c)).join(c.dim(" | "));
+    return schema.anyOf
+      .map((s) => toTSStyleOneLineInner(s, c))
+      .join(c.dim(" | "));
   }
 
   if (schema.oneOf) {
-    return schema.oneOf.map((s) => toTSStyleOneLineInner(s, c)).join(c.dim(" | "));
+    return schema.oneOf
+      .map((s) => toTSStyleOneLineInner(s, c))
+      .join(c.dim(" | "));
   }
 
   if (schema.allOf) {
-    return schema.allOf.map((s) => toTSStyleOneLineInner(s, c)).join(c.dim(" & "));
+    return schema.allOf
+      .map((s) => toTSStyleOneLineInner(s, c))
+      .join(c.dim(" & "));
   }
 
   const types = Array.isArray(schema.type) ? schema.type : [schema.type];

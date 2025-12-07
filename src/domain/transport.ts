@@ -19,16 +19,10 @@ function detectType(target: string): "stdio" | "http" | "sse" {
 }
 
 function sseUrlToHttp(sseUrl: string): string {
-  if (sseUrl.startsWith("sse+https://")) {
-    return sseUrl.replace("sse+https://", "https://");
-  }
-  if (sseUrl.startsWith("sse+http://")) {
-    return sseUrl.replace("sse+http://", "http://");
-  }
-  if (sseUrl.startsWith("sse://")) {
-    return sseUrl.replace("sse://", "http://");
-  }
-  return sseUrl;
+  return sseUrl
+    .replace(/^sse\+https:\/\//, "https://")
+    .replace(/^sse\+http:\/\//, "http://")
+    .replace(/^sse:\/\//, "http://");
 }
 
 export function createTransport(target: string): Transport {

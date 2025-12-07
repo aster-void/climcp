@@ -3,7 +3,7 @@ import { EXIT_CONNECT, EXIT_TOOL, EXIT_USAGE } from "../lib/constants.ts";
 import { readStdin } from "../lib/io.ts";
 import { listTools, formatTool, validateToolName } from "../domain/tools.ts";
 import { parsePayload } from "./parse.ts";
-import { createRunner } from "../domain/runner.ts";
+import { bootstrapRunner } from "./bootstrap.ts";
 import { getErrorMessage } from "../lib/errors.ts";
 
 export async function handleRun(
@@ -11,16 +11,7 @@ export async function handleRun(
   toolName: string | undefined,
   args: string[],
 ): Promise<never> {
-  const result = await createRunner(target, {
-    onServerStderr: (chunk) => process.stderr.write(`[server] ${chunk}`),
-  });
-
-  if (!result.ok) {
-    console.error(result.error);
-    process.exit(result.phase === "transport" ? EXIT_USAGE : EXIT_CONNECT);
-  }
-
-  const { client, shutdown } = result.runner;
+  const { client, shutdown } = await bootstrapRunner(target);
 
   const exit = async (code: number): Promise<never> => {
     await shutdown();

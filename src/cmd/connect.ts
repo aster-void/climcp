@@ -1,6 +1,6 @@
 import readline from "node:readline";
 import process from "node:process";
-import { EXIT_CONNECT, EXIT_USAGE } from "../lib/constants.ts";
+import { EXIT_CONNECT } from "../lib/constants.ts";
 import { askLine } from "../lib/io.ts";
 import {
   listTools,
@@ -9,20 +9,11 @@ import {
   type ToolInfo,
 } from "../domain/tools.ts";
 import { parseInvocation, parsePayload } from "./parse.ts";
-import { createRunner } from "../domain/runner.ts";
+import { bootstrapRunner } from "./bootstrap.ts";
 import { getErrorMessage } from "../lib/errors.ts";
 
 export async function handleConnect(target: string): Promise<never> {
-  const result = await createRunner(target, {
-    onServerStderr: (chunk) => process.stderr.write(`[server] ${chunk}`),
-  });
-
-  if (!result.ok) {
-    console.error(result.error);
-    process.exit(result.phase === "transport" ? EXIT_USAGE : EXIT_CONNECT);
-  }
-
-  const { client, shutdown } = result.runner;
+  const { client, shutdown } = await bootstrapRunner(target);
 
   let tools: ToolInfo[];
   try {
