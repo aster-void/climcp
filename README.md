@@ -1,5 +1,8 @@
 # climcp
 
+> [!IMPORTANT]
+> **This project is archived.** Use [mcptools](https://github.com/f/mcptools) instead — it's a more feature-complete Go implementation with the same goals.
+
 Speak to MCP servers directly. `climcp` is an interface between human and MCP servers.
 
 ```

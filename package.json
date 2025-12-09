@@ -1,7 +1,7 @@
 {
   "name": "climcp",
   "description": "An interface between you and MCP servers.",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "author": "aster-void",
   "main": "index.js",
   "keywords": [],
