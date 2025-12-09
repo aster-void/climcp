@@ -7,7 +7,7 @@ import {
   validateToolName,
   formatCallResult,
 } from "../domain/tools.ts";
-import { parsePayload } from "./parse.ts";
+import { parsePayload, parseQueryStyleArgs } from "./parse.ts";
 import { bootstrapRunner } from "./bootstrap.ts";
 import { getErrorMessage } from "../lib/errors.ts";
 
@@ -41,19 +41,21 @@ export async function handleRun(
     return exit(EXIT_CONNECT);
   }
 
-  let input: string;
+  // CLI args are already split by shell, so use parseQueryStyleArgs directly.
+  // Only fall back to stdin + parsePayload when no args provided.
+  let payloadResult;
   if (args.length > 0) {
-    input = args.join(" ");
+    payloadResult = parseQueryStyleArgs(args);
   } else {
+    let input: string;
     try {
       input = await readStdin();
     } catch (error) {
       console.error(`Failed to read stdin: ${getErrorMessage(error)}`);
       return exit(EXIT_USAGE);
     }
+    payloadResult = parsePayload(input, true);
   }
-
-  const payloadResult = parsePayload(input, true);
   if (!payloadResult.ok) {
     console.error(payloadResult.error.message);
     return exit(EXIT_USAGE);

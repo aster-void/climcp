@@ -26,3 +26,18 @@ test("run with unknown tool fails", async () => {
   expect(result.exitCode).not.toBe(0);
   expect(result.stderr.toString()).toContain("Tool not found: unknown_tool");
 });
+
+test("run handles args with spaces", async () => {
+  // Create a temp directory with space in name
+  const tempDir = "test dir with spaces";
+  await $`mkdir -p ${tempDir}`.quiet();
+  try {
+    const result =
+      await $`bun src/index.ts run ${SERVER} list_directory path=${tempDir}`
+        .quiet()
+        .nothrow();
+    expect(result.exitCode).toBe(0);
+  } finally {
+    await $`rmdir ${tempDir}`.quiet();
+  }
+});

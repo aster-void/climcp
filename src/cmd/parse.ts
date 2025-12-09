@@ -57,6 +57,22 @@ export function parseQueryStyle(text: string): Result<Record<string, unknown>> {
   }
 
   const parts = shellParse(trimmed);
+  return parseQueryStyleParts(parts);
+}
+
+// Parse pre-split CLI args (already processed by shell, no need to re-parse quotes).
+export function parseQueryStyleArgs(
+  args: string[],
+): Result<Record<string, unknown>> {
+  if (args.length === 0) {
+    return ok({});
+  }
+  return parseQueryStyleParts(args);
+}
+
+function parseQueryStyleParts(
+  parts: ReturnType<typeof shellParse>,
+): Result<Record<string, unknown>> {
   const result: Record<string, unknown> = {};
 
   for (const part of parts) {
