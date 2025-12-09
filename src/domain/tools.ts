@@ -29,10 +29,16 @@ export function validateToolName(tools: ToolInfo[], toolName: string): boolean {
   return tools.some((t) => t.name === toolName);
 }
 
+// Format MCP tool call result for display.
+// Converts escaped newlines to actual newlines for readability:
+// - "\\n" (JSON-escaped) -> "\n"
+// - literal backslash + n in nested strings -> "\n"
 export function formatCallResult(result: unknown): string {
   if (result === undefined) {
     return "< result: null";
   }
-  const formatted = JSON.stringify(result, null, 2).replace(/\\n/g, "\n");
+  const formatted = JSON.stringify(result, null, 2)
+    .replace(/\\\\n/g, "\n")
+    .replace(/\\n/g, "\n");
   return `< result: ${formatted}`;
 }
