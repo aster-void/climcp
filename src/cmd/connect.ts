@@ -4,27 +4,24 @@ import { EXIT_CONNECT } from "../lib/constants.ts";
 import { askLine } from "../lib/io.ts";
 import {
   listTools,
+  callTool,
   formatTool,
   formatCallResult,
-  type ToolInfo,
 } from "../domain/tools.ts";
 import { parseInvocation, parsePayload } from "./parse.ts";
 import { bootstrapRunner } from "./bootstrap.ts";
-import { getErrorMessage } from "../lib/errors.ts";
 
 export async function handleConnect(target: string): Promise<never> {
   const { client, shutdown } = await bootstrapRunner(target);
 
-  let tools: ToolInfo[];
-  try {
-    tools = await listTools(client);
-    tools.forEach((tool) => console.log(formatTool(tool)));
-  } catch (error) {
-    console.error(`Failed to list tools: ${getErrorMessage(error)}`);
+  const toolsResult = await listTools(client);
+  if (!toolsResult.ok) {
+    console.error(toolsResult.error.message);
     await shutdown();
     process.exit(EXIT_CONNECT);
   }
-
+  const tools = toolsResult.value;
+  tools.forEach((tool) => console.log(formatTool(tool)));
   const toolNames = new Set(tools.map((t) => t.name));
 
   const rl = readline.createInterface({
@@ -64,11 +61,13 @@ export async function handleConnect(target: string): Promise<never> {
       }
       case "/t":
       case "/tools": {
-        try {
-          const refreshedTools = await listTools(client);
-          refreshedTools.forEach((tool) => console.log(formatTool(tool)));
-        } catch (error) {
-          console.error(`Failed to list tools: ${getErrorMessage(error)}`);
+        const refreshedResult = await listTools(client);
+        if (refreshedResult.ok) {
+          refreshedResult.value.forEach((tool) =>
+            console.log(formatTool(tool)),
+          );
+        } else {
+          console.error(refreshedResult.error.message);
         }
         continue;
       }
@@ -109,14 +108,15 @@ Usage:
       continue;
     }
 
-    try {
-      const callResult = await client.callTool({
-        name: parsedInvocation.value.toolName,
-        arguments: payloadResult.value,
-      });
-      console.log(formatCallResult(callResult));
-    } catch (error) {
-      console.error(`Tool call failed: ${getErrorMessage(error)}`);
+    const callResult = await callTool(
+      client,
+      parsedInvocation.value.toolName,
+      payloadResult.value,
+    );
+    if (callResult.ok) {
+      console.log(formatCallResult(callResult.value));
+    } else {
+      console.error(callResult.error.message);
     }
   }
 }

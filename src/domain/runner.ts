@@ -28,20 +28,25 @@ function killStdioProcess(transport: StdioClientTransport): void {
   }
 }
 
+function tryCreateTransport(
+  target: string,
+): { ok: true; transport: Transport } | { ok: false; error: string } {
+  try {
+    return { ok: true, transport: createTransport(target) };
+  } catch (error) {
+    return { ok: false, error: `Invalid target: ${getErrorMessage(error)}` };
+  }
+}
+
 export async function createRunner(
   target: string,
   options: RunnerOptions = {},
 ): Promise<RunnerResult> {
-  let transport: Transport;
-  try {
-    transport = createTransport(target);
-  } catch (error) {
-    return {
-      ok: false,
-      error: `Invalid target: ${getErrorMessage(error)}`,
-      phase: "transport",
-    };
+  const transportResult = tryCreateTransport(target);
+  if (!transportResult.ok) {
+    return { ok: false, error: transportResult.error, phase: "transport" };
   }
+  const transport = transportResult.transport;
 
   const client = new Client(
     {
@@ -75,15 +80,10 @@ export async function createRunner(
     }
   }
 
-  try {
-    await client.connect(transport);
-  } catch (error) {
+  const connectResult = await tryConnect(client, transport);
+  if (!connectResult.ok) {
     await closeTransport(transport);
-    return {
-      ok: false,
-      error: `Failed to connect to server: ${getErrorMessage(error)}`,
-      phase: "connect",
-    };
+    return { ok: false, error: connectResult.error, phase: "connect" };
   }
 
   const shutdown = async (): Promise<void> => {
@@ -92,6 +92,21 @@ export async function createRunner(
   };
 
   return { ok: true, runner: { client, shutdown } };
+}
+
+async function tryConnect(
+  client: Client,
+  transport: Transport,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await client.connect(transport);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: `Failed to connect to server: ${getErrorMessage(error)}`,
+    };
+  }
 }
 
 async function closeTransport(transport: Transport): Promise<void> {

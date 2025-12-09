@@ -2,17 +2,38 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { type Tool } from "@modelcontextprotocol/sdk/spec.types.js";
 import { toTSStyleOneLine, parseJsonSchema } from "../lib/json-schema.ts";
 import { cyan, dim } from "../lib/colors.ts";
+import { ok, err, type Result } from "../lib/result.ts";
+import { getErrorMessage } from "../lib/errors.ts";
 
 export type ToolInfo = Pick<Tool, "name" | "description" | "inputSchema">;
 
-export async function listTools(client: Client): Promise<ToolInfo[]> {
-  const response = await client.listTools();
-  const tools = response.tools || [];
-  return tools.map((tool) => ({
-    name: tool.name,
-    description: tool.description,
-    inputSchema: tool.inputSchema,
-  }));
+export async function listTools(client: Client): Promise<Result<ToolInfo[]>> {
+  try {
+    const response = await client.listTools();
+    const tools = response.tools || [];
+    return ok(
+      tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema,
+      })),
+    );
+  } catch (error) {
+    return err(new Error(`Failed to list tools: ${getErrorMessage(error)}`));
+  }
+}
+
+export async function callTool(
+  client: Client,
+  name: string,
+  args: Record<string, unknown>,
+): Promise<Result<unknown>> {
+  try {
+    const result = await client.callTool({ name, arguments: args });
+    return ok(result);
+  } catch (error) {
+    return err(new Error(`Tool call failed: ${getErrorMessage(error)}`));
+  }
 }
 
 export function formatTool(tool: ToolInfo): string {

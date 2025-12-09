@@ -1,5 +1,7 @@
 import process from "node:process";
 import readline from "node:readline";
+import { ok, err, type Result } from "./result.ts";
+import { getErrorMessage } from "./errors.ts";
 
 export function askLine(rl: readline.Interface): Promise<string | null> {
   return new Promise((resolve) => {
@@ -14,7 +16,16 @@ export function askLine(rl: readline.Interface): Promise<string | null> {
   });
 }
 
-export async function readStdin(): Promise<string> {
+export async function tryReadStdin(): Promise<Result<string>> {
+  try {
+    const data = await readStdin();
+    return ok(data);
+  } catch (error) {
+    return err(new Error(`Failed to read stdin: ${getErrorMessage(error)}`));
+  }
+}
+
+async function readStdin(): Promise<string> {
   return new Promise((resolve) => {
     let data = "";
     process.stdin.setEncoding("utf8");
